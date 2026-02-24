@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>w00amiwxz Ultra Clicker</title>
+
+<style>
+body {
+    margin:0;
+    font-family:Arial, sans-serif;
+    background:black;
+    color:white;
+    overflow:hidden;
+}
+
+/* ===== ЭКРАНЫ ===== */
+.screen {
+    position:fixed;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    background:black;
+}
+
+.hidden {
+    display:none;
+}
+
+/* ===== КНОПКИ ===== */
+button {
+    padding:14px 28px;
+    margin:10px;
+    font-size:18px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    background:white;
+    color:black;
+    transition:0.2s;
+}
+
+button:hover {
+    transform:scale(1.05);
+}
+
+/* ===== ИГРА ===== */
+#gameArea {
+    position:fixed;
+    inset:0;
+}
+
+#gameBtn {
+    position:absolute;
+    padding:18px 35px;
+}
+
+#topBar {
+    position:fixed;
+    top:15px;
+    left:15px;
+    font-size:20px;
+}
+
+/* ===== ТРЯСКА ===== */
+.shake {
+    animation:shake 0.2s;
+}
+
+@keyframes shake {
+    0%{transform:translate(5px,5px);}
+    25%{transform:translate(-5px,5px);}
+    50%{transform:translate(5px,-5px);}
+    75%{transform:translate(-5px,-5px);}
+    100%{transform:translate(0,0);}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== ЗАСТАВКА ===== -->
+<div id="intro" class="screen">
+    <h1>w00amiwxz</h1>
+</div>
+
+<!-- ===== МЕНЮ ===== -->
+<div id="menu" class="screen hidden">
+    <h1>УЛЬТРА КЛИКЕР</h1>
+    <button onclick="startGame()">Играть</button>
+    <button onclick="showSettings()">Настройки</button>
+    <button onclick="toggleMeme()">МЕМ МОД</button>
+    <p>Рекорд: <span id="record">0</span></p>
+</div>
+
+<!-- ===== НАСТРОЙКИ ===== -->
+<div id="settings" class="screen hidden">
+    <h2>Настройки</h2>
+
+    <label><input type="checkbox" id="speedUp"> Ускорение</label><br>
+    <label><input type="checkbox" id="invisible"> Невидимка</label><br>
+    <label><input type="checkbox" id="sound"> Звук</label><br>
+    <label><input type="checkbox" id="shakeOn"> Тряска</label><br>
+    <label><input type="checkbox" id="timerOn"> Таймер</label><br>
+
+    <button onclick="backToMenu()">Назад</button>
+</div>
+
+<!-- ===== ИГРА ===== -->
+<div id="gameArea" class="hidden">
+    <div id="topBar">
+        Очки: <span id="score">0</span>
+        <span id="timer"></span>
+    </div>
+    <button id="gameBtn">ПОЙМАЙ</button>
+</div>
+
+<script>
+let score = 0;
+let record = localStorage.getItem("record") || 0;
+let speed = 600;
+let memeMode = false;
+let timer = 20;
+let timerInterval = null;
+
+const intro = document.getElementById("intro");
+const menu = document.getElementById("menu");
+const settings = document.getElementById("settings");
+const gameArea = document.getElementById("gameArea");
+const btn = document.getElementById("gameBtn");
+
+document.getElementById("record").textContent = record;
+
+/* ===== ЗАСТАВКА ===== */
+setTimeout(() => {
+    intro.classList.add("hidden");
+    menu.classList.remove("hidden");
+}, 2000);
+
+/* ===== СТАРТ ===== */
+function startGame() {
+    score = 0;
+    speed = 600;
+    timer = 20;
+    document.getElementById("score").textContent = score;
+    document.getElementById("timer").textContent = "";
+
+    menu.classList.add("hidden");
+    gameArea.classList.remove("hidden");
+
+    moveButton();
+
+    if (document.getElementById("timerOn").checked) {
+        document.getElementById("timer").textContent = " | Время: " + timer;
+        timerInterval = setInterval(() => {
+            timer--;
+            document.getElementById("timer").textContent = " | Время: " + timer;
+            if (timer <= 0) endGame();
+        }, 1000);
+    }
+}
+
+/* ===== КОНЕЦ ИГРЫ ===== */
+function endGame() {
+    clearInterval(timerInterval);
+
+    if (score > record) {
+        record = score;
+        localStorage.setItem("record", record);
+    }
+
+    document.getElementById("record").textContent = record;
+
+    gameArea.classList.add("hidden");
+    menu.classList.remove("hidden");
+}
+
+/* ===== ДВИЖЕНИЕ КНОПКИ ===== */
+function moveButton() {
+    const maxX = window.innerWidth - btn.offsetWidth;
+    const maxY = window.innerHeight - btn.offsetHeight;
+
+    btn.style.left = Math.random() * maxX + "px";
+    btn.style.top = Math.random() * maxY + "px";
+}
+
+/* ===== СОБЫТИЯ ===== */
+btn.addEventListener("mouseenter", moveButton);
+
+btn.addEventListener("click", () => {
+    score++;
+    document.getElementById("score").textContent = score;
+
+    if (document.getElementById("speedUp").checked && speed > 200) {
+        speed -= 20;
+    }
+
+    if (document.getElementById("invisible").checked) {
+        btn.style.opacity = Math.random();
+    } else {
+        btn.style.opacity = 1;
+    }
+
+    if (document.getElementById("shakeOn").checked) {
+        document.body.classList.add("shake");
+        setTimeout(() => document.body.classList.remove("shake"), 200);
+    }
+
+    if (document.getElementById("sound").checked) {
+        const audio = new Audio("https://www.soundjay.com/button/sounds/button-16.mp3");
+        audio.play();
+    }
+
+    if (memeMode) {
+        const memes = ["ЛОВИ", "ДАВАЙ", "НЕ ДОГОНИШЬ", "ХАХА", "ПОЧТИ"];
+        btn.textContent = memes[Math.floor(Math.random() * memes.length)];
+    } else {
+        btn.textContent = "ПОЙМАЙ";
+    }
+
+    setTimeout(moveButton, speed);
+});
+
+/* ===== НАСТРОЙКИ ===== */
+function showSettings() {
+    menu.classList.add("hidden");
+    settings.classList.remove("hidden");
+}
+
+function backToMenu() {
+    settings.classList.add("hidden");
+    menu.classList.remove("hidden");
+}
+
+function toggleMeme() {
+    memeMode = !memeMode;
+    alert(memeMode ? "МЕМ МОД ВКЛЮЧЕН 😈" : "МЕМ МОД ВЫКЛЮЧЕН");
+}
+</script>
+
+</body>
+</html>
